@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет - CodeBin</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/supabase.js" defer></script>
+    <script src="js/dashboard.js" defer></script>
+    <style>
+        .dashboard-header {
+            margin: 40px 0;
+            text-align: center;
+        }
+        
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background-color: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+        
+        .tab {
+            padding: 15px 30px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 16px;
+            cursor: pointer;
+            position: relative;
+            transition: var(--transition);
+        }
+        
+        .tab.active {
+            color: var(--text-color);
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary-color);
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .profile-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .avatar-upload {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .snippet-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn-icon {
+            padding: 6px 10px;
+            min-width: auto;
+        }
+        
+        .empty-dashboard {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .empty-dashboard i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+        
+        .danger-zone {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger-color);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin-top: 40px;
+        }
+        
+        .danger-zone h3 {
+            color: var(--danger-color);
+            margin-bottom: 15px;
+        }
+        
+        .danger-zone p {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-code"></i>
+                <span>CodeBin</span>
+            </a>
+            
+            <div class="nav-links">
+                <a href="index.html">Главная</a>
+                <a href="create.html">Создать</a>
+                <div class="auth-section" id="authSection"></div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div id="authRequired" style="display: none;">
+            <div class="not-found">
+                <i class="fas fa-lock"></i>
+                <h1>Требуется авторизация</h1>
+                <p>Войдите в систему для доступа к личному кабинету</p>
+                <a href="auth.html" class="btn btn-primary">Войти</a>
+            </div>
+        </div>
+        
+        <div id="dashboardContent" style="display: none;">
+            <div class="dashboard-header">
+                <h1><i class="fas fa-user-circle"></i> Личный кабинет</h1>
+                <p id="welcomeMessage"></p>
+            </div>
+            
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalSnippetsStat">0</div>
+                    <div class="stat-label">Скриптов</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalViewsStat">0</div>
+                    <div class="stat-label">Просмотров</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="accountAgeStat">0</div>
+                    <div class="stat-label">Дней с нами</div>
+                </div>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab active" data-tab="snippets">Мои скрипты</button>
+                <button class="tab" data-tab="profile">Профиль</button>
+                <button class="tab" data-tab="settings">Настройки</button>
+            </div>
+            
+            <div id="snippetsTab" class="tab-content active">
+                <div id="userSnippets">
+                    <!-- Загружается динамически -->
+                    <div class="loading">Загрузка...</div>
+                </div>
+            </div>
+            
+            <div id="profileTab" class="tab-content">
+                <form id="profileForm" class="profile-form">
+                    <div class="avatar-upload">
+                        <div class="avatar-preview" id="avatarPreview">
+                            <!-- Аватар загружается динамически -->
+                        </div>
+                        <div>
+                            <label for="avatarInput" class="btn btn-secondary">
+                                <i class="fas fa-upload"></i> Загрузить аватар
+                            </label>
+                            <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+                            <div class="hint">PNG, JPG до 2MB</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="username">
+                            <i class="fas fa-user"></i> Имя пользователя
+                        </label>
+                        <input type="text" id="username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bio">
+                            <i class="fas fa-align-left"></i> О себе
+                        </label>
+                        <textarea id="bio" rows="4" placeholder="Расскажите о себе..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="website">
+                            <i class="fas fa-globe"></i> Веб-сайт
+                        </label>
+                        <input type="url" id="website" placeholder="https://example.com">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Сохранить изменения
+                    </button>
+                </form>
+            </div>
+            
+            <div id="settingsTab" class="tab-content">
+                <div class="danger-zone">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Опасная зона</h3>
+                    <p>Удаление аккаунта приведет к безвозвратному удалению всех ваших данных.</p>
+                    <button id="deleteAccountBtn" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Удалить аккаунт
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

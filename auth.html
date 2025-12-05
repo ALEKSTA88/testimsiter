@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход / Регистрация - CodeBin</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/supabase.js" defer></script>
+    <script src="js/auth.js" defer></script>
+    <style>
+        .auth-container {
+            max-width: 400px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+        
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .auth-tab {
+            padding: 15px 30px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            transition: var(--transition);
+        }
+        
+        .auth-tab.active {
+            color: var(--text-color);
+        }
+        
+        .auth-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary-color);
+        }
+        
+        .auth-form {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .auth-form.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .oauth-buttons {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .oauth-buttons .btn {
+            width: 100%;
+            margin-bottom: 10px;
+            justify-content: center;
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 25px 0;
+            color: var(--text-secondary);
+        }
+        
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background-color: var(--border-color);
+        }
+        
+        .divider span {
+            padding: 0 15px;
+        }
+        
+        .auth-footer {
+            text-align: center;
+            margin-top: 30px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .auth-footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .error-message {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger-color);
+            color: var(--danger-color);
+            padding: 12px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .success-message {
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
+            padding: 12px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-code"></i>
+                <span>CodeBin</span>
+            </a>
+            
+            <div class="nav-links">
+                <a href="index.html">Главная</a>
+                <a href="create.html">Создать</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="auth-container">
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Вход</button>
+                <button class="auth-tab" data-tab="signup">Регистрация</button>
+            </div>
+            
+            <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
+            
+            <form id="loginForm" class="auth-form active">
+                <div class="form-group">
+                    <label for="loginEmail">
+                        <i class="fas fa-envelope"></i> Email
+                    </label>
+                    <input type="email" id="loginEmail" required 
+                           placeholder="your@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="loginPassword">
+                        <i class="fas fa-lock"></i> Пароль
+                    </label>
+                    <input type="password" id="loginPassword" required
+                           placeholder="Минимум 6 символов">
+                </div>
+                
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rememberMe">
+                        <span>Запомнить меня</span>
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-sign-in-alt"></i> Войти
+                </button>
+                
+                <div class="auth-footer">
+                    <a href="#" id="forgotPassword">Забыли пароль?</a>
+                </div>
+            </form>
+            
+            <form id="signupForm" class="auth-form">
+                <div class="form-group">
+                    <label for="signupUsername">
+                        <i class="fas fa-user"></i> Имя пользователя
+                    </label>
+                    <input type="text" id="signupUsername" required
+                           placeholder="Придумайте username" minlength="3" maxlength="20">
+                </div>
+                
+                <div class="form-group">
+                    <label for="signupEmail">
+                        <i class="fas fa-envelope"></i> Email
+                    </label>
+                    <input type="email" id="signupEmail" required
+                           placeholder="your@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="signupPassword">
+                        <i class="fas fa-lock"></i> Пароль
+                    </label>
+                    <input type="password" id="signupPassword" required
+                           placeholder="Минимум 6 символов" minlength="6">
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">
+                        <i class="fas fa-lock"></i> Подтвердите пароль
+                    </label>
+                    <input type="password" id="confirmPassword" required
+                           placeholder="Повторите пароль">
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-user-plus"></i> Зарегистрироваться
+                </button>
+                
+                <div class="auth-footer">
+                    Регистрируясь, вы соглашаетесь с <a href="#">правилами</a>
+                </div>
+            </form>
+            
+            <div class="oauth-buttons">
+                <button id="githubSignIn" class="btn btn-secondary">
+                    <i class="fab fa-github"></i> Продолжить с GitHub
+                </button>
+                
+                <button id="googleSignIn" class="btn btn-secondary">
+                    <i class="fab fa-google"></i> Продолжить с Google
+                </button>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
